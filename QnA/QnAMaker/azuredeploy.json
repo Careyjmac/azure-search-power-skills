@@ -44,6 +44,10 @@
         }
     },
     "variables": {
+        "repoURL": "https://github.com/Careyjmac/azure-search-power-skills",
+        "branch": "qna",
+        "functionProject": "QnA\\QnaMaker\\QnAMaker.csproj",
+
         "qnaServiceName": "[concat(parameters('resourcePrefix'), '-qna-', uniqueString(resourceGroup().id, deployment().name))]",
         "searchServiceName": "[concat(parameters('resourcePrefix'), '-search-service-', uniqueString(resourceGroup().id, deployment().name))]",
         "hostingPlanName": "[concat(parameters('resourcePrefix'), '-plan-', uniqueString(resourceGroup().id, deployment().name))]",
@@ -57,7 +61,7 @@
             "type": "Microsoft.CognitiveServices/accounts",
             "apiVersion": "2017-04-18",
             "name": "[variables('qnaServiceName')]",
-            "location": "[resourceGroup().location]",
+            "location": "westus",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/Sites', variables('qnaAppServiceName'))]",
                 "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
@@ -190,19 +194,23 @@
                         },
                         {
                             "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').key1, ';')]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
                         },
                         {
                             "name": "AzureWebJobsDashboard",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').key1, ';')]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
                         },
                         {
                             "name": "AzureWebJobsSecretStorageType",
                             "value": "Files"
                         },
                         {
+                          "name": "PROJECT",
+                          "value": "[variables('functionProject')]"
+                        },
+                        {
                             "name": "BlobStorageAccountConnectionString",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').key1, ';')]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
                         },
                         {
                             "name": "SearchServiceName",
@@ -238,8 +246,9 @@
                         "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
                     ],
                     "properties": {
-                        "RepoUrl": "https://github.com/Careyjmac/azure-search-power-skills",
-                        "branch": "qna",
+                        "RepoUrl": "[variables('repoURL')]",
+                        "branch": "[variables('branch')]",
+                        "project": "[variables('functionProject')]",
                         "IsManualIntegration": true
                     }
                 }
@@ -272,7 +281,7 @@
         },
         "Blob Storage Account Connection String": {
             "type": "string",
-            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').key1, ';')]"
+            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01')..keys[0].value, ';')]"
         },
         "Azure Function Name": {
             "type": "string",
