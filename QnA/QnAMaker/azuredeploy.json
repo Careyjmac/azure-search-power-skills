@@ -46,8 +46,7 @@
     "variables": {
         "repoURL": "https://github.com/Careyjmac/azure-search-power-skills",
         "branch": "qna",
-        "functionProject": "QnA\\QnaMaker\\QnAMaker.csproj",
-
+        "functionProject": "QnA\\QnAMaker\\QnAMaker.csproj",
         "qnaServiceName": "[concat(parameters('resourcePrefix'), '-qna-', uniqueString(resourceGroup().id, deployment().name))]",
         "searchServiceName": "[concat(parameters('resourcePrefix'), '-search-service-', uniqueString(resourceGroup().id, deployment().name))]",
         "hostingPlanName": "[concat(parameters('resourcePrefix'), '-plan-', uniqueString(resourceGroup().id, deployment().name))]",
@@ -177,20 +176,23 @@
             "kind": "functionapp",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
                 "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]",
                 "[resourceId('Microsoft.CognitiveServices/accounts', variables('qnaServiceName'))]"
             ],
             "properties": {
                 "name": "[variables('functionAppName')]",
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "kind": "functionapp",
                 "httpsOnly": true,
                 "siteConfig": {
                     "appSettings": [
                         {
-                            "name": "FUNCTIONS_EXTENSION_VERSION",
-                            "value": "~3"
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[toLower(variables('functionAppName'))]"
                         },
                         {
                             "name": "AzureWebJobsStorage",
@@ -201,16 +203,20 @@
                             "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
                         },
                         {
-                            "name": "AzureWebJobsSecretStorageType",
-                            "value": "Files"
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
                         },
                         {
-                          "name": "PROJECT",
-                          "value": "[variables('functionProject')]"
+                            "name": "FUNCTIONS_EXTENSION_RUNTIME",
+                            "value": "dotnet"
                         },
                         {
-                            "name": "BlobStorageAccountConnectionString",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';')]"
+                            "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                            "value": true
+                        },
+                        {
+                            "name": "PROJECT",
+                            "value": "[variables('functionProject')]"
                         },
                         {
                             "name": "SearchServiceName",
@@ -228,13 +234,7 @@
                             "name": "QnAAuthoringKey",
                             "value": "[listkeys(resourceId('Microsoft.CognitiveServices/accounts', variables('qnaServiceName')), '2017-04-18').key1]"
                         }
-                    ],
-                    "cors": {
-                        "allowedOrigins": [
-                            "*"
-                        ]
-                    },
-                    "minTlsVersion": "1.2"
+                    ]
                 }
             },
             "resources": [
