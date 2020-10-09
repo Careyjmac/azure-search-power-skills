@@ -256,7 +256,7 @@
             "kind": "CognitiveServices",
             "location": "[resourceGroup().location]",
             "properties": {}
-        },
+        }
     ],
     "outputs": {
         "Search Service Name": {
