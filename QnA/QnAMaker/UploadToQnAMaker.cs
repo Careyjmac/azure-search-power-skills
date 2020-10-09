@@ -64,12 +64,6 @@ namespace AzureCognitiveSearch.PowerSkills.QnA.QnAMaker
             return new OkObjectResult(response);
         }
 
-        // TODO: instruct people how to set these before publishing. Move to config.   
-        private static string authoringKey = "";
-        private static string resourceName = "";
-        // TODO: create the knowledge base at https://www.qnamaker.ai/
-        private static string knowledgeBaseID = "";
-
         [FunctionName("upload-to-qna-queue-trigger"), Singleton]
         public async static Task Run(
             [QueueTrigger("upload-to-qna", Connection = "AzureWebJobsStorage")]QnAQueueMessage qnaQueueMessage,
@@ -77,9 +71,9 @@ namespace AzureCognitiveSearch.PowerSkills.QnA.QnAMaker
         {
             log.LogInformation("upload-to-qna-queue-trigger: C# Queue trigger function processed");
 
-            var qnaClient = new QnAMakerClient(new ApiKeyServiceClientCredentials(authoringKey))
+            var qnaClient = new QnAMakerClient(new ApiKeyServiceClientCredentials(GetAppSetting("QnAAuthoringKey")))
             {
-                Endpoint = $"https://{resourceName}.cognitiveservices.azure.com"
+                Endpoint = $"https://{GetAppSetting("QnAServiceName")}.cognitiveservices.azure.com"
             };
 
             var updateKB = new UpdateKbOperationDTO
@@ -101,29 +95,25 @@ namespace AzureCognitiveSearch.PowerSkills.QnA.QnAMaker
                 }
             };
 
-            try
-            {
-                var updateOp = await qnaClient.Knowledgebase.UpdateAsync(knowledgeBaseID, updateKB);
-                updateOp = await MonitorOperation(qnaClient, updateOp, log);
+            var updateOp = await qnaClient.Knowledgebase.UpdateAsync(GetAppSetting("KnowledgeBaseID"), updateKB);
+            updateOp = await MonitorOperation(qnaClient, updateOp, log);
 
-                var searchClient = new SearchClient(
-                    new Uri(""),
-                    "qna-idx",
-                    new Azure.AzureKeyCredential(""));
-                // TODO only do this once it already exists i.e. the indexer is done with it
-                await searchClient.MergeOrUploadDocumentsAsync<IndexDocument>(new List<IndexDocument>
-                {
-                    new IndexDocument
-                    {
-                        id = qnaQueueMessage.Id,
-                        status = updateOp.OperationState
-                    }
-                });
-            } 
-            catch(Exception e)
+            var searchClient = new SearchClient(
+                new Uri($"https://{GetAppSetting("SearchServiceName")}.search.windows.net"),
+                "qna-idx",
+                new Azure.AzureKeyCredential(GetAppSetting("SearchServiceApiKey")));
+            // TODO check to make sure this already exists in the index i.e. the indexer has finished indexed this id
+            // so that the indexer doesn't overwrite this status with the InQueue status (avoid race condition with indexer)
+            await searchClient.MergeOrUploadDocumentsAsync<IndexDocument>(new List<IndexDocument>
             {
-                log.LogError(e, "Function failed");
-            }
+                new IndexDocument
+                {
+                    id = qnaQueueMessage.Id,
+                    status = updateOp.OperationState
+                }
+            });
+
+            await qnaClient.Knowledgebase.PublishAsync(GetAppSetting("KnowledgeBaseID"));
         }
 
         // <MonitorOperation>
@@ -146,6 +136,11 @@ namespace AzureCognitiveSearch.PowerSkills.QnA.QnAMaker
             return operation;
         }
         // </MonitorOperation>
+
+        private static string GetAppSetting(string key)
+        {
+            return Environment.GetEnvironmentVariable(key, EnvironmentVariableTarget.Process);
+        }
 
         public class QnAQueueMessage
         {
