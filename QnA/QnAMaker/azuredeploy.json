@@ -289,7 +289,7 @@
         },
         "Azure Function Host Code": {
             "type": "string",
-            "value": "[listHostKeys(resourceId('Microsoft.Web/sites/', variables('functionAppName')), '2019-08-01').functionKeys.default]"
+            "value": "[listkeys(concat(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default]"
         },
         "QnA Endpoint": {
             "type": "string",
