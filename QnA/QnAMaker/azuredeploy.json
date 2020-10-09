@@ -47,7 +47,6 @@
         "qnaServiceName": "[concat(parameters('resourcePrefix'), '-qna-', uniqueString(resourceGroup().id, deployment().name))]",
         "searchServiceName": "[concat(parameters('resourcePrefix'), '-search-service-', uniqueString(resourceGroup().id, deployment().name))]",
         "hostingPlanName": "[concat(parameters('resourcePrefix'), '-plan-', uniqueString(resourceGroup().id, deployment().name))]",
-
         "qnaAppServiceName": "[concat(parameters('resourcePrefix'), '-site-', uniqueString(resourceGroup().id, deployment().name))]",
         "storageAccountName": "[concat(parameters('resourcePrefix'), 'storage', uniqueString(resourceGroup().id, deployment().name))]",
         "functionAppName": "[concat(parameters('resourcePrefix'), '-function-app-', uniqueString(resourceGroup().id, deployment().name))]",
@@ -136,11 +135,11 @@
                         },
                         {
                             "name": "PrimaryEndpointKey",
-                            "value": "[concat(parameters('appName'), '-PrimaryEndpointKey')]"
+                            "value": "[concat(variables('qnaAppServiceName'), '-PrimaryEndpointKey')]"
                         },
                         {
                             "name": "SecondaryEndpointKey",
-                            "value": "[concat(parameters('appName'), '-SecondaryEndpointKey')]"
+                            "value": "[concat(variables('qnaAppServiceName'), '-SecondaryEndpointKey')]"
                         },
                         {
                             "name": "DefaultAnswer",
@@ -191,11 +190,11 @@
                         },
                         {
                             "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').key1, ';')]"
                         },
                         {
                             "name": "AzureWebJobsDashboard",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountid'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').key1, ';')]"
                         },
                         {
                             "name": "AzureWebJobsSecretStorageType",
@@ -251,7 +250,7 @@
             "type": "Microsoft.CognitiveServices/accounts",
             "apiVersion": "2017-04-18",
             "sku": {
-              "name": "S0"
+                "name": "S0"
             },
             "kind": "CognitiveServices",
             "location": "[resourceGroup().location]",
