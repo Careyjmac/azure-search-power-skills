@@ -290,14 +290,6 @@
         "Azure Function Host Code": {
             "type": "string",
             "value": "[listkeys(concat(resourceId('Microsoft.Web/sites', variables('functionAppName')), '/host/default/'),'2019-08-01').functionKeys.default]"
-        },
-        "QnA Endpoint": {
-            "type": "string",
-            "value": "[concat('https://',reference(resourceId('Microsoft.Web/sites', variables('qnaAppServiceName'))).hostNames[0])]"
-        },
-        "QnA Authoring Key": {
-            "type": "string",
-            "value": "[listkeys(resourceId('Microsoft.CognitiveServices/accounts', variables('qnaServiceName')), '2017-04-18').key1]"
         }
     }
 }
